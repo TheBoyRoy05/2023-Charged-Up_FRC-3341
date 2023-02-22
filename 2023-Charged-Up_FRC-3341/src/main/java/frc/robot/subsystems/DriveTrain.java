@@ -52,6 +52,11 @@ public class DriveTrain extends SubsystemBase
     _rightDriveVictor = new VictorSPX(Constants.OperatorConstants.RightDriveVictorPort);
     navX = new AHRS(SPI.Port.kMXP);
 
+    leftDriveTalon.configFactoryDefault();
+    leftDriveTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
+    rightDriveTalon.configFactoryDefault();
+    rightDriveTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
+
     _leftDriveVictor.follow(leftDriveTalon);
     _rightDriveVictor.follow(rightDriveTalon);   
   
@@ -65,11 +70,6 @@ public class DriveTrain extends SubsystemBase
 
     leftDriveTalon.setSensorPhase(true);
     rightDriveTalon.setSensorPhase(true);
-
-    leftDriveTalon.configFactoryDefault();
-    leftDriveTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
-    rightDriveTalon.configFactoryDefault();
-    rightDriveTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, 0, 10);
     
     // Week 4 Motion Magic
    leftDriveTalon.config_kP(0, 2.5, 10);
@@ -157,7 +157,7 @@ public class DriveTrain extends SubsystemBase
 
   @Override
   public void periodic() {
-    tankDrive(RobotContainer.getJoy1().getY()*0.7, RobotContainer.getJoy2().getY()*0.7);
+    tankDrive(RobotContainer.getJoy1().getY()*0.7, RobotContainer.getJoy1().getThrottle()*0.7);
     if (RobotContainer.getJoy1().getRawButtonReleased(12)){
       logOverride = !logOverride;
     }

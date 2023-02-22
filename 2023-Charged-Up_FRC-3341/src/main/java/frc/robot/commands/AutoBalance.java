@@ -22,12 +22,14 @@ public class AutoBalance extends CommandBase {
   double currentAngle;
 
   PIDController pid;
+  PIDController yawPID;
 
   public AutoBalance( DriveTrain dt) {
     // Use addRequirements() here to declare subsystem dependencies.
     this.dt = dt;
     baseSpeed = 0.33;
-    pid = new PIDController(0.7, 0.6, 0);
+    pid = new PIDController(0.5, 0.4, 0.1);
+    yawPID = new PIDController(0.02, 0, 0);
     angleThreshhold = Constants.OperatorConstants.angleThreshhold;
     addRequirements(dt);
   }
@@ -37,26 +39,22 @@ public class AutoBalance extends CommandBase {
   public void initialize() {
     dt.resetEncoders();
     pid.setSetpoint(Constants.OperatorConstants.balanceDistance);
-    currentAngle = dt.getYAngle();
+    yawPID.setSetpoint(dt.getAngle());
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    previousAngle = currentAngle;
-    currentAngle = dt.getYAngle();
-    /* 
-    if((previousAngle > 0 && currentAngle < 0) || (previousAngle < 0 && currentAngle > 0)) baseSpeed -= 0.005;
-
-    double speed;
-    if(dt.getYAngle() > angleThreshhold) speed = baseSpeed;
-    else if(dt.getYAngle() < -1 * angleThreshhold) speed = -baseSpeed;
-    else speed = 0;
-*/
-    double speed;
-    speed = pid.calculate(dt.getDisplacement());
+    double speed = pid.calculate(dt.getDisplacement());
+    double turningSpeed = yawPID.calculate(dt.getAngle());
     SmartDashboard.putNumber("Docking Speed: ", speed);
-    dt.tankDrive(speed, speed);
+
+    dt.tankDrive(speed + turningSpeed, speed - turningSpeed);
+
+    if(0.005 >= Math.abs(Constants.OperatorConstants.balanceDistance - dt.getDisplacement()) 
+            && Constants.OperatorConstants.angleThreshhold <= dt.getYAngle()){
+        Constants.OperatorConstants.balanceDistance -= 0.01 * Math.abs(dt.getYAngle())/dt.getYAngle();
+    } 
   }
 
   // Called once the command ends or is interrupted.
